@@ -98,6 +98,13 @@ class Population:
     def get_route(self, index):
         return self.routes[index]
 
+    def add_migrant(self, route):
+        worst = 0
+        for t in range(1, len(self.routes)):
+            if self.routes[worst].get_fitness() > self.routes[t].get_fitness():
+                worst = t
+        self.routes[worst] = route
+
     def get_fittest(self):
         fittest = self.routes[0]
         for t in self.routes:
@@ -110,13 +117,30 @@ class Population:
 
 
 class GA:
-    def __init__(self, world, mutation_rate, tournment_size):
+    def __init__(self, world, mutation_rate, tournment_size, elithism, population_size, label = None):
         self.world = world
         self.mutation_rate = mutation_rate
         self.tournment_size = tournment_size
-        self.elitism = False
+        self.elitism = elithism
+        self.label = label
+        # Initialize population
+        self.population = Population(population_size)
+        self.population.initialize_randomly(world)
 
-    def evolve_population(self, population):
+    def get_fittest(self):
+        return self.population.get_fittest()
+
+    def add_migrant(self, route):
+        self.population.add_migrant(route)
+
+    # run algorithm
+    def run(self, num_of_generations):
+        for i in range(0, num_of_generations):
+            self.population = self.evolve(self.population)
+
+        return self.population.get_fittest()
+
+    def evolve(self, population):
         new_population = Population(population.population_size())
         elitism_offset = 0
 
@@ -183,20 +207,3 @@ class GA:
         fittest = tournament.get_fittest()
 
         return fittest
-
-
-# run algorithm
-def run(world, population_size, num_of_generations):
-    # Initialize population
-    population = Population(population_size);
-    population.initialize_randomly(world)
-
-    print "Initial distance: " + str(population.get_fittest().get_distance())
-
-    ga = GA(world, 0.015, 5)
-    for i in range(0, num_of_generations):
-        print "Iteration: " + str(i) + " " + str(population.get_fittest().get_distance()) + " " + str(population.get_fittest())
-        population = ga.evolve_population(population)
-
-    print "Final distance: " + str(population.get_fittest().get_distance())
-    return population.get_fittest()

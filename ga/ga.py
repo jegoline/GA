@@ -117,11 +117,11 @@ class Population:
 
 
 class GA:
-    def __init__(self, world, mutation_rate, tournment_size, elithism, population_size, label = None):
+    def __init__(self, world, mutation_rate, tournment_size, elitism, population_size, label=None):
         self.world = world
         self.mutation_rate = mutation_rate
         self.tournment_size = tournment_size
-        self.elitism = elithism
+        self.elitism = elitism
         self.label = label
         # Initialize population
         self.population = Population(population_size)

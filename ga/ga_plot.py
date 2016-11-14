@@ -45,9 +45,9 @@ for interval_num in range(1, 5):
         print island.label + ' ' + str(fittest.get_distance())
 
     # perform migration (ring topology)
-    migrant = islands[0].get_fittest()
+    migrant = islands[0].get_best()
     for i in range(1, len(islands)):
-        fittest = islands[i].get_fittest()
+        fittest = islands[i].get_best()
         islands[i - 1].add_migrant(fittest)
         print 'Migrate from ' + islands[i].label + ' to ' + islands[i - 1].label + ' migrant ' \
               + str(fittest.get_distance())
@@ -59,7 +59,7 @@ for interval_num in range(1, 5):
 # find fittest among all islands
 fittest = None
 for island in islands:
-    island_fittest = island.get_fittest()
+    island_fittest = island.get_best()
     if fittest is None:
         fittest = island_fittest
     elif fittest.get_fitness() < island_fittest.get_fitness():

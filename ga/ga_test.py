@@ -1,13 +1,13 @@
 import unittest
-from ga import City, World, Route
+from ga import City, World, Route, calc_distance
 
 
 class MyTestCase(unittest.TestCase):
 
     def test_city_distance(self):
-        city = City(1, 1, "A")
+        city1 = City(1, 1, "A")
         city2 = City(5, 4, "B")
-        self.assertEquals(5, city.distance_to(city2))
+        self.assertEquals(5, calc_distance(city1, city2))
 
     def test_route_distance(self):
         world = World()

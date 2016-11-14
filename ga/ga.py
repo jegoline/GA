@@ -90,13 +90,16 @@ class Population:
         for i in range(0, len(self.routes)):
             new_route = Route(world, copy.copy(world.get_cities()))
             random.shuffle(new_route.route)
-            self.save_route(i, new_route)
+            self.set_route(i, new_route)
 
-    def save_route(self, index, route):
+    def set_route(self, index, route):
         self.routes[index] = route
 
     def get_route(self, index):
         return self.routes[index]
+
+    def population_size(self):
+        return len(self.routes)
 
     def add_migrant(self, route):
         worst = 0
@@ -112,15 +115,12 @@ class Population:
                 fittest = t
         return fittest
 
-    def population_size(self):
-        return len(self.routes)
-
 
 class GA:
-    def __init__(self, world, mutation_rate, tournment_size, elitism, population_size, label=None):
+    def __init__(self, world, mutation_rate, tournament_size, elitism, population_size, label=None):
         self.world = world
         self.mutation_rate = mutation_rate
-        self.tournment_size = tournment_size
+        self.tournament_size = tournament_size
         self.elitism = elitism
         self.label = label
         # Initialize population
@@ -142,23 +142,23 @@ class GA:
 
     def evolve(self, population):
         new_population = Population(population.population_size())
-        elitism_offset = 0
+        offset = 0
 
         # save most fittest pop
         if self.elitism:
-            new_population.save_route(0, population.get_fittest())
-            elitism_offset = 1
+            new_population.set_route(0, population.get_fittest())
+            offset = 1
 
         # produce crossover offsprings
-        for i in range(elitism_offset, new_population.population_size()):
+        for i in range(offset, new_population.population_size()):
             parent1 = self.select_parents(population)
             parent2 = self.select_parents(population)
 
             offspring = self.crossover(parent1, parent2)
-            new_population.save_route(i, offspring)
+            new_population.set_route(i, offspring)
 
         # mutate offsprings
-        for i in range(elitism_offset, new_population.population_size()):
+        for i in range(offset, new_population.population_size()):
             self.mutate(new_population.get_route(i))
 
         return new_population
@@ -200,10 +200,10 @@ class GA:
                 route.set_city(pos1, city2)
 
     def select_parents(self, population):
-        tournament = Population(self.tournment_size)
-        for i in range(0, self.tournment_size):
+        tournament = Population(self.tournament_size)
+        for i in range(0, self.tournament_size):
             ind = int(random.random() * population.population_size())
-            tournament.save_route(i, population.get_route(ind))
+            tournament.set_route(i, population.get_route(ind))
         fittest = tournament.get_fittest()
 
         return fittest

@@ -1,12 +1,13 @@
 import math
 import random
+import heapq
 
 # the code was adapted from the
 # http://www.theprojectspot.com/tutorial-post/applying-a-genetic-algorithm-to-the-travelling-salesman-problem/5
 
 
 # represents city on the grid
-class City:
+class City(object):
     def __init__(self, x, y, label=None):
         self.x = x
         self.y = y
@@ -23,7 +24,7 @@ class City:
 
 
 # represent world with cities
-class World:
+class World(object):
     def __init__(self):
         self.cities = []
 
@@ -104,15 +105,19 @@ class Population:
     def size(self):
         return len(self.routes)
 
-    def add_migrant(self, route):
-        worst = 0
-        for t in range(1, len(self.routes)):
-            if self.routes[worst].get_fitness() > self.routes[t].get_fitness():
-                worst = t
-        self.routes[worst] = route
+    def add_migrants(self, migrants):
+        worst = heapq.nsmallest(len(migrants), self.routes, key=lambda s: s.get_fitness())
+        for w in worst:
+            self.routes.remove(w)
+
+        for m in migrants:
+            self.routes.append(m)
 
     def get_best(self):
         return max(self.routes, key=lambda x: x.get_fitness())
+
+    def get_bests(self, n):
+        return heapq.nlargest(n, self.routes, key=lambda s: s.get_fitness())
 
 
 class GA:
@@ -129,8 +134,11 @@ class GA:
     def get_best(self):
         return self.population.get_best()
 
-    def add_migrant(self, route):
-        self.population.add_migrant(route)
+    def get_bests(self, n):
+        return self.population.get_bests(n)
+
+    def add_migrants(self, routes):
+        self.population.add_migrants(routes)
 
     # run algorithm
     def run(self, num_of_generations):

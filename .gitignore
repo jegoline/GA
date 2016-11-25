@@ -49,3 +49,5 @@ Temporary Items
 *.iml
 .idea/modules.xml
 .idea/workspace.xml
+.idea/vcs.xml
+

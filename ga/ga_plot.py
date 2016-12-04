@@ -104,7 +104,7 @@ class XP(object):
 
         # run evolution
         thresholds = copy.copy(self.fitness_thresholds)
-        for gen in range(1, 600):
+        for gen in range(1, 500):
             if gen % self.migration_interval == 0:
                 migrate(islands, self.num_migrants)
 
@@ -133,7 +133,7 @@ def explore_migration_interval():
         world = generate_world()
         save_world(world, 'world.json')
 
-    max_xp_num = 1
+    max_xp_num = 10
     num_migrants = 5
     fitness_thresholds = [11000, 6500]
 

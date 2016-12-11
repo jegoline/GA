@@ -105,7 +105,6 @@ class XP(object):
             islands.append(island)
 
         # run evolution
-        #thresholds = copy.copy(self.fitness_thresholds)
         for gen in range(1, 300):
             if gen % self.migration_interval == 0:
                 migrate(islands, self.num_migrants)
@@ -114,14 +113,8 @@ class XP(object):
                 island.run(1)
 
             fittest = find_fittest_island(islands)
-            #threshold = thresholds[0]
-
-            #if fittest.get_distance() < threshold:
             results.append(self.format_data(xp_num, gen, fittest.get_fitness(), fittest.get_distance(),
                                         self.num_migrants, self.migration_interval))
-                #thresholds.pop(0)
-                #if len(thresholds) == 0:
-                    #return results
 
         return results
 
@@ -138,17 +131,43 @@ def explore_migration_interval():
     max_xp_num = 10
     num_migrants = 2
 
-    for migration_interval in range(41, 52, 10):
+    for migration_interval in range(12, 113, 100):
         print 'Run ' + str(max_xp_num) + ' XPs for migration interval ' + str(migration_interval)
         xp = XP(migration_interval, num_migrants, world)
 
-        pool = ThreadPool(2)
+        pool = ThreadPool(8)
         results = pool.map(xp.run_xp, range(0, max_xp_num))
         pool.close()
         pool.join()
 
-        save_xps('experiment_data_41_51.csv', results)
+        save_xps('experiment_data_compare_low_and_high.csv', results)
         print 'Finish XPs for migration interval ' + str(migration_interval)
+
+
+
+def explore_migration_size():
+    # use predefined world if necessary
+    file_exist = os.path.isfile('world.json')
+    if file_exist and os.path.getsize('world.json') != 0:
+        world = load_world('world.json')
+    else:
+        world = generate_world()
+        save_world(world, 'world.json')
+
+    max_xp_num = 10
+    migration_interval = 112
+
+    for num_migrants in range(1, 52, 10):
+        print 'Run ' + str(max_xp_num) + ' XPs for migration size ' + str(num_migrants)
+        xp = XP(migration_interval, num_migrants, world)
+
+        pool = ThreadPool(8)
+        results = pool.map(xp.run_xp, range(0, max_xp_num))
+        pool.close()
+        pool.join()
+
+        save_xps('experiment_data_size_1_51_10_int_112.csv', results)
+        print 'Finish XPs for migration num_migrants ' + str(num_migrants)
 
 
 def animate_island_model():
@@ -205,9 +224,58 @@ def animate_island_model():
         plt.pause(1)
 
 
+def load_and_plot_experimental_data_migration_size():
+    data = []
+    with open('experiment_data_size_1_51_10_int_15.csv', 'rb') as csvfile:
+        row_data = csv.reader(csvfile, delimiter=',', quotechar='|')
+        curr_size = 1
+
+        gen_to_fit = []
+        plot_data = []
+
+        for row in row_data:
+            xp_num = int(row[0])
+            gen_num = int(row[1])
+            size = int(row[4])
+            fitness = float(row[2])
+
+            if size != curr_size:
+                for gen in gen_to_fit:
+                    plot_data.append(np.mean(gen))
+                data.append((curr_size, plot_data))
+                curr_size = size
+
+                gen_to_fit = []
+                plot_data = []
+
+            print str(gen_num) + ' ' + str(len(gen_to_fit)) + ' ' + str(size)
+            if len(gen_to_fit) < gen_num:
+                gen_to_fit.append([])
+
+            gen_to_fit[gen_num - 1].append(fitness)
+
+        for gen in gen_to_fit:
+            plot_data.append(np.mean(gen))
+        data.append((curr_size, plot_data))
+
+        line1, = plt.plot(range(0, len(data[0][1])), data[0][1], 'k-', label='size=' + str(data[0][0]))
+        line2, = plt.plot(range(0, len(data[1][1])), data[1][1], 'm--', label='size=' + str(data[1][0]))
+        line3, = plt.plot(range(0, len(data[2][1])), data[2][1], 'g-.', label='size=' + str(data[2][0]), lw=1.5)
+        line4, = plt.plot(range(0, len(data[3][1])), data[3][1], 'b--', label='size=' + str(data[3][0]))
+        line5, = plt.plot(range(0, len(data[4][1])), data[4][1], 'r-', label='size=' + str(data[4][0]))
+
+        plt.legend(handles=[line1, line2, line3, line4, line5], loc=4)
+        plt.ylabel('fitness')
+        plt.xlabel('generation')
+
+        plt.show()
+
+
+# plot several lines (one for every interval),
+# each lines represents the average fitness as a function of generation number
 def load_and_plot_experimental_data():
     data = []
-    with open('experiment_data2.csv', 'rb') as csvfile:
+    with open('experiment_data_1_30_2.csv', 'rb') as csvfile:
         row_data = csv.reader(csvfile, delimiter=',', quotechar='|')
         curr_int= 1
 
@@ -239,20 +307,113 @@ def load_and_plot_experimental_data():
             plot_data.append(np.mean(gen))
         data.append((curr_int, plot_data))
 
-    line1, = plt.plot(range(0, len(data[0][1])), data[0][1], 'm-', label='interval=' + str(data[0][0]))
-    line2, = plt.plot(range(0, len(data[1][1])), data[1][1], 'r-', label='interval=' + str(data[1][0]))
-    line3, = plt.plot(range(0, len(data[2][1])), data[2][1], 'b-', label='interval=' + str(data[2][0]))
-    line4, = plt.plot(range(0, len(data[3][1])), data[3][1], 'g-', label='interval=' + str(data[3][0]))
+    line1, = plt.plot(range(0, len(data[0][1])), data[0][1], 'k-', label='interval=' + str(data[0][0]))
+    line2, = plt.plot(range(0, len(data[1][1])), data[1][1], 'm--', label='interval=' + str(data[1][0]))
+    line3, = plt.plot(range(0, len(data[2][1])), data[2][1], 'g-.', label='interval=' + str(data[2][0]), lw=1.5)
+    line4, = plt.plot(range(0, len(data[3][1])), data[3][1], 'b--', label='interval=' + str(data[3][0]))
+    line5, = plt.plot(range(0, len(data[12][1])), data[12][1], 'r-', label='interval=' + str(data[12][0]))
 
-    plt.legend(handles=[line1, line2, line3, line4])
+    plt.legend(handles=[line1, line2, line3, line4, line5], loc = 4)
     plt.ylabel('fitness')
     plt.xlabel('generation')
 
     plt.show()
 
 
+def load_and_plot_experimental_data_3():
+    data = []
+    with open('experiment_data_compare_low_and_high.csv', 'rb') as csvfile:
+        row_data = csv.reader(csvfile, delimiter=',', quotechar='|')
+        curr_int = 12
+
+        gen_to_fit = []
+        plot_data = []
+
+        for row in row_data:
+            xp_num = int(row[0])
+            gen_num = int(row[1])
+            interval = int(row[5])
+            fitness = float(row[2])
+
+            if interval != curr_int:
+                for gen in gen_to_fit:
+                    plot_data.append(np.mean(gen))
+                plot_data = plot_data[0:700]
+                data.append((curr_int, plot_data))
+                curr_int = interval
+
+                gen_to_fit = []
+                plot_data = []
+
+            print str(gen_num) + ' ' + str (len(gen_to_fit)) + ' ' + str(interval)
+            if len(gen_to_fit) < gen_num:
+                gen_to_fit.append([])
+
+            gen_to_fit[gen_num-1].append(fitness)
+
+        for gen in gen_to_fit:
+            plot_data.append(np.mean(gen))
+        plot_data = plot_data[0:700]
+        data.append((curr_int, plot_data))
+
+    line1, = plt.plot(range(0, len(data[0][1])), data[0][1], 'k-', label='interval=' + str(data[0][0]))
+    line2, = plt.plot(range(0, len(data[1][1])), data[1][1], 'm--', label='interval=' + str(data[1][0]))
+
+    plt.legend(handles=[line1, line2], loc = 4)
+    plt.ylabel('fitness')
+    plt.xlabel('generation')
+
+    plt.show()
+
+# plots the best achieved fitness as a function of migration interval
+def load_and_plot_experimental_data_2():
+    intervals = []
+    best_fitness = []
+    with open('experiment_data_1_30_2.csv', 'rb') as csvfile:
+        row_data = csv.reader(csvfile, delimiter=',', quotechar='|')
+        curr_int= 1
+
+        gen_to_fit = []
+        plot_data = []
+
+        for row in row_data:
+            xp_num = int(row[0])
+            gen_num = int(row[1])
+            interval = int(row[5])
+            fitness = float(row[2])
+
+            if interval != curr_int:
+                for gen in gen_to_fit:
+                    plot_data.append(np.mean(gen))
+
+                intervals.append(curr_int)
+                best_fitness.append(max(plot_data))
+
+                curr_int = interval
+                gen_to_fit = []
+                plot_data = []
+
+            print str(gen_num) + ' ' + str (len(gen_to_fit)) + ' ' + str(interval)
+            if len(gen_to_fit) < gen_num:
+                gen_to_fit.append([])
+
+            gen_to_fit[gen_num-1].append(fitness)
+
+        for gen in gen_to_fit:
+            plot_data.append(np.median(gen))
+        intervals.append(curr_int)
+        best_fitness.append(max(plot_data))
+
+    plt.plot(intervals, best_fitness, 'm-')
+    plt.ylabel('best fitness')
+    plt.xlabel('interval')
+    plt.show()
+
 
 if __name__ == "__main__":
     #animate_island_model()
     #explore_migration_interval()
-    load_and_plot_experimental_data()
+    explore_migration_size()
+    #load_and_plot_experimental_data_migration_size()
+    #load_and_plot_experimental_data()
+    #load_and_plot_experimental_data_3()

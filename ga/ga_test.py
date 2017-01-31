@@ -1,5 +1,5 @@
 import unittest
-from ga import City, World, Route, calc_distance
+from ga_algorithm import City, World, Route, calc_distance
 
 
 class MyTestCase(unittest.TestCase):
